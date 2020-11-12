@@ -1,0 +1,6 @@
+{
+    "require": {
+        "jschaedl/iban-validation": "^1.6",
+        "genkgo/camt": "^1.1"
+    }
+}
