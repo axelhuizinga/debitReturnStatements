@@ -25,6 +25,7 @@ if(count($_GET)==0 && $argc == 2)
 $appLog = dirname($argv[0]).'drs.log';
 #edump(strlen(file_get_contents($_GET['file'])));
 edump(print_r($_GET,1));
+$drsGot = array();
 if(file_exists($_GET['file']))
 {
 	$tmp = dirname($_GET['file']).'/tmp_'.date('YmdHis',time());
@@ -50,12 +51,21 @@ if(file_exists($_GET['file']))
 
 	}
 	$z->close();
-	delTree($tmp);
+	echo count($drsGot)." Rücklastschriften extrahiert";
+	if(saveResult($drsGot,$tmp)){
+		echo "Bereit zum Upload von $tmp/RLast.json".PHP_EOL;
+		$answer = readline("Dateien löschen - J/N?");
+	}
+	if($answer=='J'||$answer == 'j')
+		delTree($tmp);
 
+}
+
+function saveResult($res, $tmp){
+	return file_put_contents("$tmp/RLast.json",json_encode($res));
 }
 #header('Content-Type: application/json');
 #echo json_encode(array('rlData'=>$rla),JSON_FORCE_OBJECT);
-echo count($drsGot)." Rücklastschriften extrahiert";
 #echo json_encode($drsGot);
 listAll($drsGot);
 exit('OK');
@@ -63,7 +73,7 @@ exit('OK');
 function listAll($list){
 	foreach($list as $l){
 		#echo(print_r($l, 1));
-		echo("id: $l[id] iban: $l[iban] Betrag: $l[amount]\r\n");
+		echo("id: $l[id] iban: $l[iban] Betrag: $l[amount] baID: $l[ba_id]".PHP_EOL);
 	}
 }
 
@@ -103,6 +113,8 @@ function addDRS($xml){
 			if($rInfo = $entry->getTransactionDetail()->getReturnInformation()){
 				#edump(print_r($entry->getTransactionDetails(),1));exit;
 				$traDet = $entry->getTransactionDetail();
+				if(!$traDet->getReference()->getEndToEndId())
+					continue;
 				$account = getAccount($traDet->getRelatedParties());#[1]->getAccount();
 				#edump($traDet->getRelatedParties()[1]->getAccount()->getIdentification());
 				edump($rInfo->getCode().'::'.sprintf("%.2f", $money->getAmount()/100).'::'.$money->isNegative());	
@@ -111,10 +123,10 @@ function addDRS($xml){
 				edump('getRemittanceInformation:'.$traDet->getRemittanceInformation()->getMessage().' getRelatedPartyAccount::'.$iban.'  getEndToEndId::'.$traDet->getReference()->getEndToEndId());
 				$rlData = array(
 					'id'=>intval($traDet->getReference()->getMandateId()),
-					'baID'=>$traDet->getReference()->getEndToEndId(),
+					'ba_id'=>$traDet->getReference()->getEndToEndId(),
 					'iban'=>$iban,
-					'sepaCode'=>$rInfo->getCode(),
-					'dealId'=>$traDet->getReference()->getMandateId(),
+					'sepa_code'=>$rInfo->getCode(),
+					//'dealId'=>$traDet->getReference()->getMandateId(),
 					'amount'=>sprintf("%.2f", $money->getAmount()/100)
 				);
 				array_push($rla,$rlData);
