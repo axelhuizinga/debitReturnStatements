@@ -53,11 +53,13 @@ if(file_exists($_GET['file']))
 	$z->close();
 	echo count($drsGot)." Rücklastschriften extrahiert";
 	if(saveResult($drsGot,$tmp)){
+		listAll($drsGot);
 		echo "Bereit zum Upload von $tmp/RLast.json".PHP_EOL;
-		$answer = readline("Dateien löschen - J/N?");
+		#$answer = readline("Dateien löschen - J/N?");
 	}
-	if($answer=='J'||$answer == 'j')
-		delTree($tmp);
+	#if($answer=='J'||$answer == 'j')
+	#	delTree($tmp);
+	sleep(5);
 
 }
 
@@ -67,7 +69,7 @@ function saveResult($res, $tmp){
 #header('Content-Type: application/json');
 #echo json_encode(array('rlData'=>$rla),JSON_FORCE_OBJECT);
 #echo json_encode($drsGot);
-listAll($drsGot);
+
 exit('OK');
 
 function listAll($list){
