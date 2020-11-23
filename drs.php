@@ -26,13 +26,29 @@ $appLog = dirname($argv[0]).'drs.log';
 #edump(strlen(file_get_contents($_GET['file'])));
 edump(print_r($_GET,1));
 $drsGot = array();
-if(file_exists($_GET['file']))
+#clearstatcache();
+chdir(dirname($argv[0]));
+echo(getcwd().PHP_EOL);
+$file = str_replace(array(' ',"'"), array('_',''), basename($_GET['file']));
+$file = str_replace("'", '', $_GET['file']);
+#$file = "test.txt";
+#file_put_contents($file,"hallo welt");
+echo(basename($_GET['file'])." cp ".$_GET['file']." $file");
+#exit(1);
+#touch($file);
+#system("cp ".$_GET['file']." $file");
+#echo(get_current_user());
+#system("ls -l ".$file);
+#echo(file_get_contents($_GET['file']));
+echo((file_exists($file)?"Y":"N").PHP_EOL);
+if(file_exists($file))
 {
-	$tmp = dirname($_GET['file']).'/tmp_'.date('YmdHis',time());
+	#echo((copy($_GET['file'], $file)?"Y":"N").PHP_EOL);
+	$tmp =  'tmp_'.date('YmdHis',time());
 	mkdir($tmp);
-	$z = zip_open($_GET['file']);
+	#$z = zip_open($_GET['file']);
 	$z = new \ZipArchive();
-	$res = $z->open($_GET['file']);
+	$res = $z->open($file);
 
 	if ($res === TRUE) {
 		$drsGot = array();
@@ -48,10 +64,12 @@ if(file_exists($_GET['file']))
 			$drsGot = array_merge($drsGot, addDRS($z->getFromIndex($i++)));
 			#edump();
 		}
-
+		$z->close();
 	}
-	$z->close();
-	echo count($drsGot)." Rücklastschriften extrahiert";
+	else{
+		echo $file." wurde geöffnet:".($res?'Y':'N');
+	}
+	echo count($drsGot)." Rücklastschriften extrahiert".PHP_EOL;
 	if(saveResult($drsGot,$tmp)){
 		listAll($drsGot);
 		echo "Bereit zum Upload von $tmp/RLast.json".PHP_EOL;
@@ -61,6 +79,9 @@ if(file_exists($_GET['file']))
 	#	delTree($tmp);
 	sleep(5);
 
+}
+else{
+	echo "Datei $file nicht gefunden";
 }
 
 function saveResult($res, $tmp){
