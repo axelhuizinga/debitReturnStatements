@@ -26,22 +26,30 @@ $appLog = dirname($argv[0]).'drs.log';
 #edump(strlen(file_get_contents($_GET['file'])));
 edump(print_r($_GET,1));
 $drsGot = array();
-
+#clearstatcache();
 chdir(dirname($argv[0]));
-#echo(getcwd().PHP_EOL);
-
-echo $_GET['file'].PHP_EOL;
-$tmp = 'tmp_'.date('YmdHis',time());
-mkdir($tmp);
-
+echo(getcwd().PHP_EOL);
 $file = str_replace(array(' ',"'"), array('_',''), basename($_GET['file']));
-$copied = system("COPY ".$_GET['file']." $tmp\$file");
-#$res = $z->open($_GET['file']);
-if($copied)
+$file = str_replace("'", '', $_GET['file']);
+#$file = "test.txt";
+#file_put_contents($file,"hallo welt");
+echo(basename($_GET['file'])." cp ".$_GET['file']." $file");
+#exit(1);
+#touch($file);
+#system("cp ".$_GET['file']." $file");
+#echo(get_current_user());
+#system("ls -l ".$file);
+#echo(file_get_contents($_GET['file']));
+echo((file_exists($file)?"Y":"N").PHP_EOL);
+if(file_exists($file))
 {
+	#echo((copy($_GET['file'], $file)?"Y":"N").PHP_EOL);
+	$tmp =  'tmp_'.date('YmdHis',time());
+	mkdir($tmp);
+	#$z = zip_open($_GET['file']);
 	$z = new \ZipArchive();
-	clearstatcache();
 	$res = $z->open($file);
+
 	if ($res === TRUE) {
 		$drsGot = array();
 		$z->extractTo($tmp);
@@ -54,18 +62,26 @@ if($copied)
 		$i=0;
 		while ($i<$z->count()) {
 			$drsGot = array_merge($drsGot, addDRS($z->getFromIndex($i++)));
+			#edump();
 		}
 		$z->close();
 	}
-	echo count($drsGot)." Rücklastschriften nach $tmp extrahiert".PHP_EOL;
+	else{
+		echo $file." wurde geöffnet:".($res?'Y':'N');
+	}
+	echo count($drsGot)." Rücklastschriften extrahiert".PHP_EOL;
 	if(saveResult($drsGot,$tmp)){
 		listAll($drsGot);
 		echo "Bereit zum Upload von $tmp/RLast.json".PHP_EOL;
+		#$answer = readline("Dateien löschen - J/N?");
 	}
+	#if($answer=='J'||$answer == 'j')
+	#	delTree($tmp);
+	sleep(5);
+
 }
 else{
-	echo "res:".print_r($res,1).PHP_EOL;
-	system("rd /s /q $tmp");
+	echo "Datei $file nicht gefunden";
 }
 
 function saveResult($res, $tmp){
@@ -75,7 +91,7 @@ function saveResult($res, $tmp){
 #echo json_encode(array('rlData'=>$rla),JSON_FORCE_OBJECT);
 #echo json_encode($drsGot);
 
-exit(0);
+exit('OK');
 
 function listAll($list){
 	foreach($list as $l){
@@ -91,10 +107,17 @@ function addDRS($xml){
 	##edump($config);
 	$reader = new Reader($config);
 	$dir = '/var/www/vhosts/pitverwaltung.de/files';
+	#$reader = new Genkgo\Camt\Reader(Config::getDefault());
+	#$message = $reader->readFile($dir.'/camt053.v2.minimal.xml');
+	#$message = $reader->readFile($dir.'/camt/2014-01-03_C52_DE58740618130100033626_EUR_A00035.xml');
+	#$message = $reader->readFile($_GET['file']);
 	$message = $reader->readString($xml);
+	#$message = $reader->readFile($dir.'/camt-1169231300-43060967-2020-09-23.xml');
+	#print_r($message);
 	$s_i = 0;
 	$r = 0;
 	$t = 0;
+	#edump(get_included_files());
 	edump(strlen(print_r($message,1)));
 	$statements = $message->getRecords();
 	$count_statements = count($statements);
