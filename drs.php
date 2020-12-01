@@ -26,36 +26,52 @@ $appLog = dirname($argv[0]).'drs.log';
 #edump(strlen(file_get_contents($_GET['file'])));
 edump(print_r($_GET,1));
 $drsGot = array();
-
+#echo(showUser());exit;
+### change dir into script directory
 chdir(dirname($argv[0]));
-#echo(getcwd().PHP_EOL);
+echo(getcwd().PHP_EOL);
 
 echo $_GET['file'].PHP_EOL;
-$tmp = 'tmp_'.date('YmdHis',time());
-mkdir($tmp);
+$tmp = 'tmp_'.date('ymdHis',time());
+if(!mkdir($tmp)){
+	die("Konnte Verzeichnis $tmp nicht anlegen!");
+};
 
 $file = str_replace(array(' ',"'"), array('_',''), basename($_GET['file']));
-$copied = system("COPY ".$_GET['file']." $tmp\$file");
+#$copied = system("COPY ".$_GET['file']." $tmp\\$file");
+chmod($_GET['file'],2+4) or die("chmod failed:".print_r(error_get_last(),1).PHP_EOL);
+//1 = execute, 2 = write, 4 = read
+echo " copy ".$_GET['file']."to $tmp\\$file";
+$copied = copy($_GET['file'],"$tmp\\$file");
 #$res = $z->open($_GET['file']);
 if($copied)
 {
-	$z = new \ZipArchive();
-	clearstatcache();
-	$res = $z->open($file);
-	if ($res === TRUE) {
-		$drsGot = array();
-		$z->extractTo($tmp);
-		$od = opendir($tmp);
-		edump($z->count()."::".count(scandir($tmp)));
-		if($z->count() == count(scandir($tmp))-2)
-		{
-			edump($z->count()." Dateien entpackt");
+	system("ls -l $tmp/*");
+	if(preg_match("zip$",$file))
+	{
+		$z = new \ZipArchive();
+		clearstatcache();
+		$res = $z->open("$tmp\\$file");
+		if ($res === TRUE) {
+			$z->extractTo($tmp);
+			$od = opendir($tmp);
+			edump($z->count()."::".count(scandir($tmp)));
+			if($z->count() == count(scandir($tmp))-2)
+			{
+				edump($z->count()." Dateien entpackt");
+			}
+			$i=0;
+			while ($i<$z->count()) {
+				$drsGot = array_merge($drsGot, addDRS($z->getFromIndex($i++)));
+			}
+			$z->close();
 		}
-		$i=0;
-		while ($i<$z->count()) {
-			$drsGot = array_merge($drsGot, addDRS($z->getFromIndex($i++)));
+		else{
+			echo("Unpacking into $tmp ".($res?'OK':$res));
 		}
-		$z->close();
+	}
+	else{
+		$drsGot = array_merge($drsGot, addDRS(file_get_contents("$tmp\\$file")));
 	}
 	echo count($drsGot)." Rücklastschriften nach $tmp extrahiert".PHP_EOL;
 	if(saveResult($drsGot,$tmp)){
@@ -64,8 +80,10 @@ if($copied)
 	}
 }
 else{
-	echo "res:".print_r($res,1).PHP_EOL;
-	system("rd /s /q $tmp");
+	echo "errors:".print_r(error_get_last(),1).PHP_EOL;
+	#rmdir($tmp);
+	die("Konnte nicht nach $tmp\\$file kopieren");
+	#system("rd /s /q $tmp");
 }
 
 function saveResult($res, $tmp){
