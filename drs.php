@@ -6,7 +6,7 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 
 use Genkgo\Camt\Config;
 use Genkgo\Camt\Reader;
-use SimpleXMLElement;
+#use SimpleXMLElement;
 
 require_once('vendor/autoload.php');
 require_once('autoload.php');
@@ -38,16 +38,26 @@ if(!mkdir($tmp)){
 };
 
 $file = str_replace(array(' ',"'"), array('_',''), basename($_GET['file']));
-#$copied = system("COPY ".$_GET['file']." $tmp\\$file");
-chmod($_GET['file'],2+4) or die("chmod failed:".print_r(error_get_last(),1).PHP_EOL);
+$copied = system("COPY ".$_GET['file']." $tmp\\$file");
+#chmod($_GET['file'],2+4) or die("chmod failed:".print_r(error_get_last(),1).PHP_EOL);
 //1 = execute, 2 = write, 4 = read
-echo " copy ".$_GET['file']."to $tmp\\$file";
-$copied = copy($_GET['file'],"$tmp\\$file");
+
+#$copied = copy($_GET['file'],"$tmp\\$file");
 #$res = $z->open($_GET['file']);
-if($copied)
+if(strstr($copied,'1 Datei(en) kopiert.'))
 {
-	system("ls -l $tmp/*");
-	if(preg_match("zip$",$file))
+	#system("dir $tmp/")
+	$mzip = preg_match('/zip/',$file, $matches, PREG_OFFSET_CAPTURE);
+	if(substr($file,$matches[0][1],3)==='zip')
+	{
+		echo('zip file type found :)'.PHP_EOL);
+	}	
+	echo substr($file,$matches[0][1],3)."<".$matches[0][1].">->$copied<- copy ".$_GET['file']."to $tmp\\ $file<<".PHP_EOL;
+	#echo((preg_match('/zip$/',$file)?'Y':'N').PHP_EOL);
+	#echo((preg_match('/zip\\\$/',$file)?'Y':'N').PHP_EOL);
+	#echo((preg_match('/zip/',$file)?'Y':'N').PHP_EOL);
+	#echo(error_get_last()['message']);
+	if(is_array($matches) && is_array($matches[0]) && substr($file,$matches[0][1],3)==='zip')
 	{
 		$z = new \ZipArchive();
 		clearstatcache();
@@ -71,6 +81,7 @@ if($copied)
 		}
 	}
 	else{
+		echo("Verarbeite Datei $file".PHP_EOL);
 		$drsGot = array_merge($drsGot, addDRS(file_get_contents("$tmp\\$file")));
 	}
 	echo count($drsGot)." Rücklastschriften nach $tmp extrahiert".PHP_EOL;
@@ -107,9 +118,19 @@ function addDRS($xml){
 	$config = Config::getDefault();
 	#$config->disableXsdValidation();
 	##edump($config);
+	if(strpos("<", $xml)!=0){
+		echo(strpos("<", $xml).PHP_EOL);
+		return [];
+	}
 	$reader = new Reader($config);
 	$dir = '/var/www/vhosts/pitverwaltung.de/files';
-	$message = $reader->readString($xml);
+	try{
+		$message = $reader->readString($xml);
+	}
+	catch(Exception $e){
+		echo('Exception:'.print_r($e,1).PHP_EOL);
+		echo('xml:'.substr($xml,0,8).PHP_EOL);
+	}
 	$s_i = 0;
 	$r = 0;
 	$t = 0;
