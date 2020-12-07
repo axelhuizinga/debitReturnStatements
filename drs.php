@@ -5,8 +5,9 @@
 error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 
 use Genkgo\Camt\Config;
-use Genkgo\Camt\Reader;
 #use SimpleXMLElement;
+use Genkgo\Camt\Reader;
+use Genkgo\Camt\Camt052\MessageFormat;
 
 require_once('vendor/autoload.php');
 require_once('autoload.php');
@@ -118,8 +119,9 @@ function addDRS($xml){
 
 	$config = Config::getDefault();
 	#$config->disableXsdValidation();
-	##edump($config);
+	##edump($config);###/Camt052/MessageFormat/V02.php
 	$messageFormats = $config->getMessageFormats();
+	$config->addMessageFormat(new V02());
 	foreach ($messageFormats as $messageFormat) {
 		if (true /*$messageFormat->getXmlNs() === $xmlNs*/) {
 			echo $messageFormat->getName().'::'.$messageFormat->getXmlNs().PHP_EOL;
