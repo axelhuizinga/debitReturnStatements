@@ -118,6 +118,13 @@ function addDRS($xml){
 	$config = Config::getDefault();
 	#$config->disableXsdValidation();
 	##edump($config);
+	$messageFormats = $config->getMessageFormats();
+	foreach ($messageFormats as $messageFormat) {
+		if ($messageFormat->getXmlNs() === $xmlNs) {
+			echo $messageFormat.PHP_EOL;
+		}
+	}
+	exit();
 	if(strpos("<", $xml)!=0){
 		echo(strpos("<", $xml).PHP_EOL);
 		return [];
