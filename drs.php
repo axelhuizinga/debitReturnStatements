@@ -124,8 +124,9 @@ function addDRS($xml){
 		if (true /*$messageFormat->getXmlNs() === $xmlNs*/) {
 			echo $messageFormat->getName().'::'.$messageFormat->getXmlNs().PHP_EOL;
 		}
-	}
-	exit(print_r(messageFormats,1));
+	}	
+	print_r(messageFormats,1);
+	#exit(print_r(messageFormats,1));
 	if(strpos("<", $xml)!=0){
 		echo(strpos("<", $xml).PHP_EOL);
 		return [];
