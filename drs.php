@@ -48,16 +48,17 @@ if(strstr($copied,'1 Datei(en) kopiert.'))
 {
 	#system("dir $tmp/")
 	$mzip = preg_match('/zip/',$file, $matches, PREG_OFFSET_CAPTURE);
-	if(substr($file,$matches[0][1],3)==='zip')
+	if(isset($matches[0]) && substr($file,$matches[0][1],3)==='zip')
 	{
 		echo('zip file type found :)'.PHP_EOL);
-	}	
-	echo substr($file,$matches[0][1],3)."<".$matches[0][1].">->$copied<- copy ".$_GET['file']."to $tmp\\ $file<<".PHP_EOL;
+		
+		echo substr($file,$matches[0][1],3)."<".$matches[0][1].">->$copied<- copy ".$_GET['file']."to $tmp\\ $file<<".PHP_EOL;
+	}
 	#echo((preg_match('/zip$/',$file)?'Y':'N').PHP_EOL);
 	#echo((preg_match('/zip\\\$/',$file)?'Y':'N').PHP_EOL);
 	#echo((preg_match('/zip/',$file)?'Y':'N').PHP_EOL);
 	#echo(error_get_last()['message']);
-	if(is_array($matches) && is_array($matches[0]) && substr($file,$matches[0][1],3)==='zip')
+	if(is_array($matches) && isset($matches[0]) && is_array($matches[0]) && substr($file,$matches[0][1],3)==='zip')
 	{
 		$z = new \ZipArchive();
 		clearstatcache();
@@ -120,7 +121,7 @@ function addDRS($xml){
 	##edump($config);
 	$messageFormats = $config->getMessageFormats();
 	foreach ($messageFormats as $messageFormat) {
-		if ($messageFormat->getXmlNs() === $xmlNs) {
+		if (true /*$messageFormat->getXmlNs() === $xmlNs*/) {
 			echo $messageFormat.PHP_EOL;
 		}
 	}
