@@ -122,7 +122,7 @@ function addDRS($xml){
 	$messageFormats = $config->getMessageFormats();
 	foreach ($messageFormats as $messageFormat) {
 		if (true /*$messageFormat->getXmlNs() === $xmlNs*/) {
-			echo print_r($messageFormat,1).PHP_EOL;
+			echo $messageFormat->getName().PHP_EOL;
 		}
 	}
 	exit(print_r(messageFormats,1));
