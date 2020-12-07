@@ -7,7 +7,7 @@ error_reporting(E_ERROR | E_PARSE | E_NOTICE);
 use Genkgo\Camt\Config;
 #use SimpleXMLElement;
 use Genkgo\Camt\Reader;
-use Genkgo\Camt\Camt052\MessageFormat;
+use Genkgo\Camt\Camt052\MessageFormat\V02;
 
 require_once('vendor/autoload.php');
 require_once('autoload.php');
